@@ -85,8 +85,9 @@
 import _ from "lodash";
 import pp from "libs/text_outline_parser";
 import { createNamespacedHelpers } from "vuex";
-const { mapActions, mapGetters } = createNamespacedHelpers("case_search");
+import url from '../libs/urls';
 
+const { mapActions, mapGetters } = createNamespacedHelpers("case_search");
 
 const jurisdictions = [
   { val: "", name: "All jurisdictions" },
@@ -217,16 +218,18 @@ export default {
       return newValue;
     },
     runCaseSearch: function runCaseSearch() {
-      this.pendingSearch = true;
+      //this.pendingSearch = true;
       const searchQ = this.reformatDates();
+      const searchUsingURL = url.url('search_using');
+      console.log(searchUsingURL)
       if (searchQ.query !== "") {
         if (this.showingLimits && searchQ.searchLimit) {
           this.fetchForSource({queryObj: searchQ, source: this.searchLimit})
         } else {
           this.fetchForAllSources({queryObj: searchQ});
         }
-        this.$emit("input", searchQ);
-        this.pendingSearch = false;
+        //this.$emit("input", searchQ);
+      
       }
     },
     emitCancel: function() {
