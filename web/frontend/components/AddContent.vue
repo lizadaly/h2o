@@ -23,6 +23,8 @@
         </div>
 
         <div class="add-resource-body" v-if="caseTab">
+          <legal-document-search />
+          <!--
           <case-searcher
             :search-on-top="false"
             :can-cancel="true"
@@ -30,6 +32,7 @@
             @choose="selectCase"
           />
           <case-results :queryObj="caseQueryObj" @choose="selectCase"/>
+          -->
         </div>
         
         <div class="add-resource-body" v-else-if="textTab">
@@ -98,8 +101,10 @@
 
 <script>
 import Modal from "./Modal";
-import CaseSearcher from "./CaseSearcher";
-import CaseResults from "./CaseResults";
+// import CaseSearcher from "./CaseSearcher";
+// import CaseResults from "./CaseResults";
+import LegalDocumentSearch from "./Search/LegalDocumentSearch";
+
 import Editor from "./TinyMCEEditor";
 
 
@@ -113,8 +118,9 @@ const { mapActions } = createNamespacedHelpers("case_search");
 export default {
   components: {
     Modal,
-    CaseSearcher,
-    CaseResults,
+    LegalDocumentSearch,
+    // CaseSearcher,
+    // CaseResults,
     editor: Editor
   },
   props: ["casebook", "section"],
