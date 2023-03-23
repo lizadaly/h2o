@@ -1,7 +1,7 @@
 <template>
     <section>
-        <search-form />
-        <result-form />
+        <search-form v-on:search-results="onSearchResults" />
+        <result-form v-bind:search-results="results" />
     </section>
 </template>
 
@@ -13,6 +13,14 @@ export default {
     components: {
         SearchForm,
         ResultForm
+    },
+    data: () => ({
+        results: [],
+    }),
+    methods: {
+        onSearchResults: function(res) {
+            this.results = res
+        }
     }
 }
 </script>
