@@ -28,10 +28,10 @@ export default {
   methods: {
     search: async function () {
       this.pending = true;
-      const url = api({ sourceId: 1 });
+      const url = api({ sourceId: 1 }) + '?' + new URLSearchParams({q: this.query})
       const resp = await fetch(url);
-      const results = await resp.json();
-      this.$emit("search-results", results);
+      const results = await resp.json(); 
+      this.$emit("search-results", results.results);
       this.pending = false;      
     },
   },
@@ -42,7 +42,7 @@ export default {
 form {
   display: flex;
   flex-wrap: wrap;
-  margin: auto;
+  margin: 15px auto 30px 0 !important;
   justify-content: space-between;
   align-items: center;
   gap: 1em;
