@@ -1,6 +1,6 @@
 <template>
   <form class="form-group case-search"
-    v-on:submit.prevent="search">
+    @submit.prevent="search">
     <input
       type="text"
       class="form-control"
@@ -11,6 +11,7 @@
       type="submit"
       class="save-button"
       :value="pending ? 'Searching...' : 'Search'"
+      :disabled="pending"
     />
   </form>
 </template>
@@ -42,7 +43,7 @@ export default {
 form {
   display: flex;
   flex-wrap: wrap;
-  margin: 15px auto 30px 0 !important;
+  margin: 30px auto 30px 0 !important;
   justify-content: space-between;
   align-items: center;
   gap: 1em;

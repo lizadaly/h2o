@@ -23,7 +23,7 @@
         </div>
 
         <div class="add-resource-body" v-if="caseTab">
-          <legal-document-search />
+          <legal-document-search :casebook="casebook"/>
           <!--
           <case-searcher
             :search-on-top="false"
@@ -209,6 +209,7 @@ export default {
     selectCase: function(c) {
       let importUrl = this.docImportUrl({sourceId: c.source_id});
       let addUrl = this.docAddUrl({casebookId: this.casebook});
+      console.log(importUrl, addUrl);
       let formData = new FormData();
       formData.append("section", this.section);
       const handler = this.handleSubmitResponse;
