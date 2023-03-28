@@ -1,7 +1,7 @@
 <template>
   <section>
     <search-form @search-results="onSearchResults" />
-    <result-form @add-doc="onAddDoc" :search-results="results" />
+    <result-form @add-doc="onAddDoc" :search-results="results" :added="added"/>
   </section>
 </template>
 
@@ -11,8 +11,7 @@ import ResultForm from "./ResultForm";
 import url from "../../libs/urls";
 import { get_csrf_token } from '../../legacy/lib/helpers';
 
-const docImport = url.url('from_source');
-//const docAdd = url.url('new_legal_doc');
+const api = url.url('legal_document_resource_view');
 
 export default {
   props: {
@@ -24,23 +23,35 @@ export default {
   },
   data: () => ({
     results: [],
+    added: undefined,
   }),
   methods: {
+    reset: function () {
+      this.results = [];
+      this.added = undefined;
+    },
     onSearchResults: function (res) {
+      this.reset();
       this.results = res;
     },
-    onAddDoc: async function (resourceId) {
-      const resp = await fetch(docImport({sourceId: 1}), {
+    onAddDoc: async function (sourceRef) {
+      this.added = undefined;
+      const resp = await fetch(api({casebookId: this.casebook}), {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
             "X-CSRF-Token": get_csrf_token()
         },
-        body: JSON.stringify({id: resourceId})
-    })
-    console.log(resp)
+        body: JSON.stringify({source_id: 1, source_ref: sourceRef})
+      })
+      const body = await resp.json();
+      this.added = {
+        resourceId: body.resource_id,
+        redirectUrl: body.redirect_url,
+        sourceRef
+      }
+      console.log(body)
 
-//      const addUrl = this.docAddUrl({casebookId: this.casebook});
     },
   },
 };
