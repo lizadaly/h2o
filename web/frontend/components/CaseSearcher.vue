@@ -157,7 +157,7 @@ const jurisdictions = [
 ];
 
 export default {
-  props: ["searchOnTop", "canCancel", "value"],
+  props: ["value"],
   data: () => ({
     jurisdictions,
     pendingSearch: false,

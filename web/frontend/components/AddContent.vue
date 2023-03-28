@@ -26,8 +26,6 @@
           <legal-document-search :casebook="casebook"/>
           <!--
           <case-searcher
-            :search-on-top="false"
-            :can-cancel="true"
             v-model="caseQueryObj"
             @choose="selectCase"
           />
