@@ -29,6 +29,7 @@
           />
           <case-results :queryObj="caseQueryObj" @choose="selectCase"/>
         </div>
+        
         <div class="add-resource-body" v-else-if="textTab">
           <form ref="textForm" class="new-text" v-on:submit.stop.prevent="submitTextForm()">
 
