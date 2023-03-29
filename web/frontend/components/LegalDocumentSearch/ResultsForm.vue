@@ -8,7 +8,7 @@
     </li>
     <li
       v-for="r in searchResults"
-      @click="(e) => add(e.target.closest('li'), r.id)"
+      @click="(e) => add(e.target.closest('li'), r.id, r.sourceId)"
       :data-result-selected="r.id === selectedResult"
       :data-result-added="added && r.id === added.sourceRef"
       :key="r.id"
@@ -21,8 +21,8 @@
       <span class="cite" :title="r.fullCitations">{{ r.shortCitations }}</span>
       <span class="date">{{ r.effectiveDate }}</span>
       <span class="source">
-        <a target="_blank" title="Open in the Case Law Access Project" :href="r.url"
-          >CAP</a
+        <a target="_blank" title="Open on external site" :href="r.url"
+          >{{ r.name }}</a
         >
       </span>
       <span class="added-message" v-if="added && r.id === added.sourceRef">
@@ -51,12 +51,12 @@ export default {
     edit: function () {
       location.href = this.added.redirectUrl;
     },
-    add: function (row, id) {
+    add: function (row, id, sourceId) {
       if (row.getAttribute("disabled")) {
         return;
       }
       row.classList.toggle("adding");
-      this.$emit("add-doc", id);
+      this.$emit("add-doc", id, sourceId);
     },
   },
 };

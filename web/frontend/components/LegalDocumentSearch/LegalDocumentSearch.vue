@@ -1,7 +1,7 @@
 <template>
   <section>
     <search-form @search-results="onSearchResults" />
-    <result-form
+    <results-form
       @add-doc="onAddDoc"
       @reset-search="resetSearch"
       :search-results="results"
@@ -13,9 +13,10 @@
 
 <script>
 import SearchForm from "./SearchForm";
-import ResultForm from "./ResultForm";
+import ResultsForm from "./ResultsForm"; 
 import url from "../../libs/urls";
 import { get_csrf_token } from "../../legacy/lib/helpers";
+
 
 const api = url.url("legal_document_resource_view");
 
@@ -26,7 +27,7 @@ export default {
   },
   components: {
     SearchForm,
-    ResultForm,
+    ResultsForm,
   },
   data: () => ({
     results: [],
@@ -43,7 +44,7 @@ export default {
       this.resetSearch();
       this.results = res;
     },
-    onAddDoc: async function (sourceRef) {
+    onAddDoc: async function (sourceRef, sourceId) {
       this.added = undefined;
       this.selectedResult = sourceRef;
       const resp = await fetch(api({ casebookId: this.casebook }), {
@@ -53,10 +54,10 @@ export default {
           "X-CSRF-Token": get_csrf_token(),
         },
         body: JSON.stringify({
-          source_id: 1,
+          source_id: sourceId,
           source_ref: sourceRef,
           section_id: this.section,
-        }), // FIXME handle both sources
+        }), 
       });
       const body = await resp.json();
       this.added = {

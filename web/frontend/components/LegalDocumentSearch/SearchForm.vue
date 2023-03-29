@@ -139,29 +139,49 @@ export default {
       { val: "wyo", name: "Wyoming" },
     ],
     showAdvanced: false,
-    source: undefined,
     jurisdiction: undefined,
     before_date: undefined,
-    after_date: undefined
+    after_date: undefined,
+    source: undefined
   }),
   computed: {
     ...mapGetters(["getSources"]),
   },
   methods: {
     search: async function () {
+      if (!this.query) {
+        return;
+      }
       this.pending = true;
-      const url =
-        api({ sourceId: 1 }) +
-        "?" +
-        new URLSearchParams({
-          q: this.query,
-          jurisdiction: this.jurisdiction || "",
-          before_date: this.before_date || "",
-          after_date: this.after_date || "",
-        }); // FIXME use multiple sources
-      const resp = await fetch(url);
-      const results = await resp.json();
-      this.$emit("search-results", results.results);
+      const sources = [];
+
+      for (const {id, name} of this.source || this.getSources) {
+
+        const url =
+          api({ sourceId: id }) +
+          "?" +
+          new URLSearchParams({
+            q: this.query,
+            jurisdiction: this.jurisdiction || "",
+            before_date: this.before_date || "",
+            after_date: this.after_date || "",
+          });
+        sources.push({url, id, name});
+      }
+      const results = [];
+      await Promise.all(
+        sources.map((source) => {
+          const {url, id, name} = source
+          fetch(url)
+            .then((r) => r.json())
+            .then((r) => {
+              r.results.map(row => {
+                results.push({name, sourceId: id, ...row})
+              })
+            })
+        }))
+      console.log(results);
+      this.$emit("search-results", results);
       this.pending = false;
     },
     toggleAdvanced: function () {
