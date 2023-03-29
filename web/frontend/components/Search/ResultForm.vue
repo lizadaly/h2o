@@ -1,5 +1,5 @@
 <template>
-  <ol :class="resultId ? 'adding': ''">
+  <ol :class="selectedResult ? 'adding': ''">
     <li v-if="searchResults.length > 0">
       <span class="name">Case</span>
       <span class="cite">Citation</span>
@@ -10,10 +10,10 @@
       v-for="r in searchResults"
         @click="(e) => add(e.target.closest('li'), r.id)"
         :data-doc-id="r.id"
-        :data-result-selected="r.id === resultId"
+        :data-result-selected="r.id === selectedResult"
         :data-result-added="added && r.id === added.sourceRef"
         :key="r.id"
-        :disabled="!!resultId"
+        :disabled="!!selectedResult"
         class="results-entry"
         role="button"
         tabindex="0"
@@ -30,10 +30,10 @@
         >
       </span>
       <span class="added-message" v-if="added && r.id === added.sourceRef">
-        This document has been added to your casebook.
-        
-        <a :href="added.redirectUrl">Edit your new resource</a>, 
-        <a>search again</a>, or close this window.
+        <span class="success-message">This document has been added to your casebook.</span>
+        <button @click="edit">Edit</button>
+        <button @click="$emit('reset')">Search again</button>
+        <button class="close">Close</button>
       </span>
     </li>
   </ol>
@@ -43,19 +43,21 @@
 export default {
   props: {
     searchResults: Array,
+    selectedResult: Number,
     added: Object,
   },
   data: () => ({
-    resultId: undefined,
     adding: false
   }),
   methods: {
+    edit: function () {
+      location.href=this.added.redirectUrl
+    },
     add: function (row, id) {
       if (row.getAttribute("disabled")) {
         return;
       }
       row.classList.toggle('adding')
-      this.resultId = id
       this.$emit('add-doc', id)
     },
   },
@@ -83,7 +85,7 @@ ol {
   &.adding {
     
     li:not([data-result-selected]) {
-        opacity: 0.5;
+        display: none;
     }
 
     li:hover,

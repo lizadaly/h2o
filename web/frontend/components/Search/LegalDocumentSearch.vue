@@ -1,7 +1,7 @@
 <template>
   <section>
     <search-form @search-results="onSearchResults" />
-    <result-form @add-doc="onAddDoc" :search-results="results" :added="added"/>
+    <result-form @add-doc="onAddDoc" @reset-search="resetSearch" :search-results="results" :added="added" :selected-result="selectedResult" />
   </section>
 </template>
 
@@ -24,18 +24,21 @@ export default {
   data: () => ({
     results: [],
     added: undefined,
+    selectedResult: undefined,
   }),
   methods: {
-    reset: function () {
+    resetSearch: function () {
       this.results = [];
       this.added = undefined;
+      this.selectedResult = undefined;
     },
     onSearchResults: function (res) {
-      this.reset();
+      this.resetSearch();
       this.results = res;
     },
     onAddDoc: async function (sourceRef) {
       this.added = undefined;
+      this.selectedResult = sourceRef;
       const resp = await fetch(api({casebookId: this.casebook}), {
         method: "POST",
         headers: {
