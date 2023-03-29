@@ -57,7 +57,7 @@
         </fieldset>
       </label>
       <p>
-        {{ searchLimit ? searchLimit.long_description : "" }}
+        {{ source && source.long_description }}
       </p>
     </fieldset>
   </form>
@@ -141,14 +141,24 @@ export default {
     showAdvanced: false,
     source: undefined,
     jurisdiction: undefined,
+    before_date: undefined,
+    after_date: undefined
   }),
   computed: {
-    ...mapGetters(['getSources']),
+    ...mapGetters(["getSources"]),
   },
   methods: {
     search: async function () {
       this.pending = true;
-      const url = api({ sourceId: 1 }) + "?" + new URLSearchParams({ q: this.query }); // FIXME use multiple sources
+      const url =
+        api({ sourceId: 1 }) +
+        "?" +
+        new URLSearchParams({
+          q: this.query,
+          jurisdiction: this.jurisdiction || "",
+          before_date: this.before_date || "",
+          after_date: this.after_date || "",
+        }); // FIXME use multiple sources
       const resp = await fetch(url);
       const results = await resp.json();
       this.$emit("search-results", results.results);
@@ -200,7 +210,7 @@ form {
     flex-wrap: wrap;
     margin: 1em 0;
     flex-basis: 100%;
-    
+
     label {
       width: 100%;
       line-height: 2em;
@@ -225,7 +235,6 @@ form {
         input {
           padding: 3px;
           text-indent: 10px;
-
         }
       }
     }
