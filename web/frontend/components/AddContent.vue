@@ -101,7 +101,7 @@
 import Modal from "./Modal";
 // import CaseSearcher from "./CaseSearcher";
 // import CaseResults from "./CaseResults";
-import LegalDocumentSearch from "./Search/LegalDocumentSearch";
+import LegalDocumentSearch from "./LegalDocumentSearch/LegalDocumentSearch";
 
 import Editor from "./TinyMCEEditor";
 

@@ -9,7 +9,7 @@ import AuditButton from "../components/AuditButton";
 import Dashboard from "../components/Dashboard";
 import ExportButton from "../components/ExportButton";
 import Globals from "../components/Globals";
-import LegalDocumentSearch from "../components/Search/LegalDocumentSearch";
+import LegalDocumentSearch from "../components/LegalDocumentSearch/LegalDocumentSearch";
 import PortalVue from "portal-vue";
 import QuickAdd from "../components/QuickAdd";
 import SectionCloner from "../components/SectionCloner";

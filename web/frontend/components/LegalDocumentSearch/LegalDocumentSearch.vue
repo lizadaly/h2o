@@ -46,17 +46,18 @@ export default {
     onAddDoc: async function (sourceRef) {
       this.added = undefined;
       this.selectedResult = sourceRef;
-      const resp = await fetch(
-        api({ casebookId: this.casebook, sectionId: this.section }),
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRF-Token": get_csrf_token(),
-          },
-          body: JSON.stringify({ source_id: 1, source_ref: sourceRef }), // FIXME handle both sources
-        }
-      );
+      const resp = await fetch(api({ casebookId: this.casebook }), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": get_csrf_token(),
+        },
+        body: JSON.stringify({
+          source_id: 1,
+          source_ref: sourceRef,
+          section_id: this.section,
+        }), // FIXME handle both sources
+      });
       const body = await resp.json();
       this.added = {
         resourceId: body.resource_id,
