@@ -1,6 +1,6 @@
 <template>
-  <ol :class="selectedResult ? 'adding': ''">
-    <li v-if="searchResults.length > 0">
+  <ol :class="selectedResult ? 'adding' : ''">
+    <li v-if="searchResults.length > 0" class="labels">
       <span class="name">Case</span>
       <span class="cite">Citation</span>
       <span class="date">Effective date</span>
@@ -8,32 +8,30 @@
     </li>
     <li
       v-for="r in searchResults"
-        @click="(e) => add(e.target.closest('li'), r.id)"
-        :data-doc-id="r.id"
-        :data-result-selected="r.id === selectedResult"
-        :data-result-added="added && r.id === added.sourceRef"
-        :key="r.id"
-        :disabled="!!selectedResult"
-        class="results-entry"
-        role="button"
-        tabindex="0"
+      @click="(e) => add(e.target.closest('li'), r.id)"
+      :data-result-selected="r.id === selectedResult"
+      :data-result-added="added && r.id === added.sourceRef"
+      :key="r.id"
+      :disabled="!!selectedResult"
+      class="results-entry"
+      role="button"
+      tabindex="0"
     >
       <span class="name" :title="r.fullName">{{ r.shortName }}</span>
       <span class="cite" :title="r.fullCitations">{{ r.shortCitations }}</span>
       <span class="date">{{ r.effectiveDate }}</span>
       <span class="source">
-        <a
-          target="_blank"
-          title="Open in the Case Law Access Project"
-          :href="r.url"
+        <a target="_blank" title="Open in the Case Law Access Project" :href="r.url"
           >CAP</a
         >
       </span>
       <span class="added-message" v-if="added && r.id === added.sourceRef">
-        <span class="success-message">This document has been added to your casebook.</span>
-        <button @click="edit">Edit</button>
-        <button @click="$emit('reset')">Search again</button>
-        <button class="close">Close</button>
+        <span class="success-message"
+          >This document has been added to your casebook.</span
+        >
+        <button class="btn btn-primary" @click="edit">Edit document</button>
+        <button class="btn btn-default" @click="$emit('reset-search')">New search</button>
+        <button class="btn btn-default btn-close">Close</button>
       </span>
     </li>
   </ol>
@@ -47,18 +45,18 @@ export default {
     added: Object,
   },
   data: () => ({
-    adding: false
+    adding: false,
   }),
   methods: {
     edit: function () {
-      location.href=this.added.redirectUrl
+      location.href = this.added.redirectUrl;
     },
     add: function (row, id) {
       if (row.getAttribute("disabled")) {
         return;
       }
-      row.classList.toggle('adding')
-      this.$emit('add-doc', id)
+      row.classList.toggle("adding");
+      this.$emit("add-doc", id);
     },
   },
 };
@@ -83,9 +81,8 @@ ol {
     border-top: 0.5px solid rgb(149, 149, 149);
   }
   &.adding {
-    
-    li:not([data-result-selected]) {
-        display: none;
+    li:not([data-result-selected]):not(.labels) {
+      display: none;
     }
 
     li:hover,
@@ -97,7 +94,7 @@ ol {
       cursor: wait;
     }
     li[data-result-added] {
-      background: hsl(117, 43%, 80%);
+      background: initial;
       cursor: auto;
     }
   }
@@ -128,11 +125,22 @@ ol {
       flex-basis: 10ch;
     }
     .added-message {
+      margin-top: 2em;
       flex-basis: 100%;
-      margin: auto;
-      display: inline-flex;
-      padding: 1em;
-      text-align: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1em;
+      justify-content: space-between;
+      .success-message {
+        flex-basis: 100%;
+      }
+      button {
+        width: 30%;
+
+        &.btn-close {
+          background: gray;
+        }
+      }
     }
     a {
       text-decoration: underline !important;

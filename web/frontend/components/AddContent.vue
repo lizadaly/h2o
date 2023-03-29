@@ -23,7 +23,7 @@
         </div>
 
         <div class="add-resource-body" v-if="caseTab">
-          <legal-document-search :casebook="casebook"/>
+          <legal-document-search :casebook="casebook" :section="section"/>
           <!--
           <case-searcher
             v-model="caseQueryObj"
