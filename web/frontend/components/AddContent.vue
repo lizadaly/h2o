@@ -23,14 +23,7 @@
         </div>
 
         <div class="add-resource-body" v-if="caseTab">
-          <legal-document-search :casebook="casebook" :section="section"/>
-          <!--
-          <case-searcher
-            v-model="caseQueryObj"
-            @choose="selectCase"
-          />
-          <case-results :queryObj="caseQueryObj" @choose="selectCase"/>
-          -->
+          <legal-document-search :casebook="casebook" :section="section" @close="showModal = false"/>
         </div>
         
         <div class="add-resource-body" v-else-if="textTab">
@@ -99,8 +92,6 @@
 
 <script>
 import Modal from "./Modal";
-// import CaseSearcher from "./CaseSearcher";
-// import CaseResults from "./CaseResults";
 import LegalDocumentSearch from "./LegalDocumentSearch/LegalDocumentSearch";
 
 import Editor from "./TinyMCEEditor";
@@ -117,8 +108,6 @@ export default {
   components: {
     Modal,
     LegalDocumentSearch,
-    // CaseSearcher,
-    // CaseResults,
     editor: Editor
   },
   props: ["casebook", "section"],
@@ -177,11 +166,6 @@ export default {
       this.currentTab = newTab;
       tryFocus();
     },
-    runCaseSearch: function runCaseSearch() {
-      if (this.caseQuery !== "") {
-        this.fetch({ query: this.caseQuery });
-      }
-    },
     submitCaseForm: function submitCaseForm() {},
     submitTextForm: function submitTextForm() {
       let formData = new FormData(this.$refs.textForm);
@@ -203,19 +187,6 @@ export default {
         this.handleSubmitResponse,
         this.handleSubmitErrors
       );
-    },
-    selectCase: function(c) {
-      let importUrl = this.docImportUrl({sourceId: c.source_id});
-      let addUrl = this.docAddUrl({casebookId: this.casebook});
-      console.log(importUrl, addUrl);
-      let formData = new FormData();
-      formData.append("section", this.section);
-      const handler = this.handleSubmitResponse;
-      this.pendingSubmit = true;
-      Axios.post(importUrl, { id: c.id }).then(resp => {
-          formData.append("resource_id", resp.data.id)
-          Axios.post(addUrl, formData).then(handler, this.handleSubmitErrors);
-      });
     },
     handleSubmitResponse: function handleSubmitResponse(response) {
       let location = response.request.responseURL;

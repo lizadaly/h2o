@@ -4,7 +4,7 @@
     <results-form
       @add-doc="onAddDoc"
       @reset-search="resetSearch"
-      @close="onClose"
+      @close="$emit('close')"
       :search-results="results"
       :added="added"
       :selected-result="selectedResult"
@@ -14,10 +14,9 @@
 
 <script>
 import SearchForm from "./SearchForm";
-import ResultsForm from "./ResultsForm"; 
+import ResultsForm from "./ResultsForm";
 import url from "../../libs/urls";
 import { get_csrf_token } from "../../legacy/lib/helpers";
-
 
 const api = url.url("legal_document_resource_view");
 
@@ -58,7 +57,7 @@ export default {
           source_id: sourceId,
           source_ref: sourceRef,
           section_id: this.section,
-        }), 
+        }),
       });
       const body = await resp.json();
       this.added = {
@@ -67,10 +66,6 @@ export default {
         sourceRef,
       };
     },
-    onClose: function () {
-      console.log('closing')
-      this.$emit('close');
-    }
   },
 };
 </script>
