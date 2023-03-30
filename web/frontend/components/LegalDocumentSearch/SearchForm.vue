@@ -13,7 +13,11 @@
       :disabled="pending"
     />
 
-    <button class="advanced-search-toggle" @click.prevent="toggleAdvanced" type="button">
+    <button
+      class="advanced-search-toggle"
+      @click.prevent="toggleAdvanced"
+      type="button"
+    >
       Advanced search
     </button>
 
@@ -22,7 +26,11 @@
         Source:
         <select class="form-control" v-model="source">
           <option :value="undefined">All sources</option>
-          <option :value="source.id" v-for="source in getSources" :key="source.id">
+          <option
+            :value="source.id"
+            v-for="source in getSources"
+            :key="source.id"
+          >
             {{ source.name }}
           </option>
         </select>
@@ -142,7 +150,7 @@ export default {
     jurisdiction: undefined,
     before_date: undefined,
     after_date: undefined,
-    source: undefined
+    source: undefined,
   }),
   computed: {
     ...mapGetters(["getSources"]),
@@ -154,9 +162,12 @@ export default {
       }
       this.pending = true;
       const sources = [];
-
-      for (const {id, name} of this.source || this.getSources) {
-
+      const sourceDetail = this.getSources.filter((s) =>
+        this.source ? s.id === this.source : true
+      );
+      
+      let order = 0; // Sources will come back ordered in "priority order", which we want to retain
+      for (const { id, name } of sourceDetail) {
         const url =
           api({ sourceId: id }) +
           "?" +
@@ -166,21 +177,30 @@ export default {
             before_date: this.before_date || "",
             after_date: this.after_date || "",
           });
-        sources.push({url, id, name});
+        sources.push({ url, id, name, order });
+        order += 1;
       }
+
       const results = [];
+
       await Promise.all(
         sources.map((source) => {
-          const {url, id, name} = source
+          const { url, id, name, order } = source;
           fetch(url)
             .then((r) => r.json())
             .then((r) => {
-              r.results.map(row => {
-                results.push({name, sourceId: id, ...row})
-              })
-            })
-        }))
-      console.log(results);
+              r.results.map((row) => {
+                row.id = row.id.toString(); // Normalize ID values to strings
+                results.push({
+                  name,
+                  sourceId: id,
+                  sourceOrder: order,
+                  ...row,
+                });
+              });
+            });
+        })
+      );
       this.$emit("search-results", results);
       this.pending = false;
     },

@@ -1,13 +1,13 @@
 <template>
   <ol :class="selectedResult ? 'adding' : ''">
-    <li v-if="searchResults.length > 0" class="labels">
+    <li v-if="sorted.length > 0" class="labels">
       <span class="name">Case</span>
       <span class="cite">Citation</span>
       <span class="date">Effective date</span>
       <span class="source">Source</span>
     </li>
     <li
-      v-for="r in searchResults"
+      v-for="r in sorted"
       @click="(e) => add(e.target.closest('li'), r.id, r.sourceId)"
       :data-result-selected="r.id === selectedResult"
       :data-result-added="added && r.id === added.sourceRef"
@@ -21,9 +21,10 @@
       <span class="cite" :title="r.fullCitations">{{ r.shortCitations }}</span>
       <span class="date">{{ r.effectiveDate }}</span>
       <span class="source">
-        <a target="_blank" title="Open on external site" :href="r.url"
+        <a v-if="r.url" target="_blank" title="Open on external site" :href="r.url"
           >{{ r.name }}</a
         >
+        <span v-else>{{ r.name }}</span>
       </span>
       <span class="added-message" v-if="added && r.id === added.sourceRef">
         <span class="success-message"
@@ -41,12 +42,17 @@
 export default {
   props: {
     searchResults: Array,
-    selectedResult: Number,
+    selectedResult: String,
     added: Object,
   },
   data: () => ({
     adding: false,
   }),
+  computed: {
+    sorted() {     
+      return [...this.searchResults].sort((a, b) => a.sourceOrder - b.sourceOrder)
+    }
+  },
   methods: {
     edit: function () {
       location.href = this.added.redirectUrl;
@@ -114,7 +120,7 @@ ol {
       cursor: not-allowed;
     }
     .name {
-      flex-basis: 30%;
+      flex-basis: 40%;
     }
 
     .cite {
@@ -123,6 +129,10 @@ ol {
 
     .date {
       flex-basis: 10ch;
+      flex-grow: 1;
+    }
+    .source {
+      flex-grow: 1;
     }
     .added-message {
       margin-top: 2em;

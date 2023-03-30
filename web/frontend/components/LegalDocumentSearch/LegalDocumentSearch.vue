@@ -46,7 +46,7 @@ export default {
     },
     onAddDoc: async function (sourceRef, sourceId) {
       this.added = undefined;
-      this.selectedResult = sourceRef;
+      this.selectedResult = sourceRef.toString();
       const resp = await fetch(api({ casebookId: this.casebook }), {
         method: "POST",
         headers: {
@@ -65,7 +65,6 @@ export default {
         redirectUrl: body.redirect_url,
         sourceRef,
       };
-      console.log(body);
     },
   },
 };
