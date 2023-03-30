@@ -4,6 +4,7 @@
       type="text"
       class="form-control"
       placeholder="Search for a case or section of federal code"
+      ref="queryText"
       v-model="query"
     />
     <input
@@ -154,6 +155,9 @@ export default {
   }),
   computed: {
     ...mapGetters(["getSources"]),
+  },
+  mounted() {
+    this.$refs.queryText.focus()
   },
   methods: {
     search: async function () {
