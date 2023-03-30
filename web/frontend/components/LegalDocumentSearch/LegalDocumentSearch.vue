@@ -31,19 +31,18 @@ export default {
     ResultsForm,
   },
   data: () => ({
-    results: [],
+    results: undefined,
     added: undefined,
     selectedResult: undefined,
   }),
   methods: {
     resetSearch: function () {
-      this.results = [];
+      this.results = undefined;
       this.added = undefined;
       this.selectedResult = undefined;
     },
     onSearchResults: function (res) {
       this.resetSearch();
-      console.log(res)
       this.results = res;
     },
     onAddDoc: async function (sourceRef, sourceId) {

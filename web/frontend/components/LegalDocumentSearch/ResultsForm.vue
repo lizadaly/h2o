@@ -1,4 +1,5 @@
 <template>
+  <section>
   <ol :class="selectedResult ? 'adding' : ''">
     <li v-if="sorted.length > 0" class="labels">
       <span class="name">Case</span>
@@ -37,6 +38,10 @@
       </span>
     </li>
   </ol>
+  <p v-if="Array.isArray(searchResults) && searchResults.length === 0">
+    No legal documents were found matching your search.
+  </p>
+  </section>
 </template>
 
 <script>
@@ -51,7 +56,7 @@ export default {
   }),
   computed: {
      sorted() {     
-      return [...this.searchResults].sort((a, b) => a.sourceOrder - b.sourceOrder)
+      return [...this.searchResults || []].sort((a, b) => a.sourceOrder - b.sourceOrder)
      }
   },
   methods: {
