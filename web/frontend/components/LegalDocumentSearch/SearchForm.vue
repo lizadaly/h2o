@@ -165,7 +165,7 @@ export default {
       const sourceDetail = this.getSources.filter((s) =>
         this.source ? s.id === this.source : true
       );
-      
+
       let order = 0; // Sources will come back ordered in "priority order", which we want to retain
       for (const { id, name } of sourceDetail) {
         const url =
@@ -181,28 +181,29 @@ export default {
         order += 1;
       }
 
-      const results = [];
-
-      await Promise.all(
-        sources.map((source) => {
+      const searchResults = await Promise.all(
+        sources.map(async (source) => {
           const { url, id, name, order } = source;
-          fetch(url)
+          return fetch(url)
             .then((r) => r.json())
             .then((r) => {
-              r.results.map((row) => {
-                row.id = row.id.toString(); // Normalize ID values to strings
-                results.push({
+              const { results } = r;
+
+              return results.map((row) => {
+                row.id = row.id.toString(); // normalize IDs from the API to strings
+                return {
                   name,
                   sourceId: id,
                   sourceOrder: order,
                   ...row,
-                });
+                };
               });
             });
         })
       );
-      this.$emit("search-results", results);
+
       this.pending = false;
+      this.$emit("search-results", searchResults.flat());
     },
     toggleAdvanced: function () {
       this.showAdvanced = !this.showAdvanced;

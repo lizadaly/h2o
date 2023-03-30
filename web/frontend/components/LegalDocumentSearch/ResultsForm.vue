@@ -9,6 +9,7 @@
     <li
       v-for="r in sorted"
       @click="(e) => add(e.target.closest('li'), r.id, r.sourceId)"
+      @keyup.enter="(e) => add(e.target.closest('li'), r.id, r.sourceId)"
       :data-result-selected="r.id === selectedResult"
       :data-result-added="added && r.id === added.sourceRef"
       :key="r.id"
@@ -32,7 +33,7 @@
         >
         <button class="btn btn-primary" @click="edit">Edit document</button>
         <button class="btn btn-default" @click="$emit('reset-search')">New search</button>
-        <button class="btn btn-default btn-close">Close</button>
+        <button class="btn btn-default btn-close" @click="$emit('close')">Close</button>
       </span>
     </li>
   </ol>
@@ -49,9 +50,9 @@ export default {
     adding: false,
   }),
   computed: {
-    sorted() {     
+     sorted() {     
       return [...this.searchResults].sort((a, b) => a.sourceOrder - b.sourceOrder)
-    }
+     }
   },
   methods: {
     edit: function () {
@@ -109,8 +110,9 @@ ol {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     padding: 0.5em;
+    gap: 0.5em;
 
     &:hover,
     &:focus-within {
@@ -124,7 +126,7 @@ ol {
     }
 
     .cite {
-      flex-basis: 40%;
+      flex-basis: 30%;
     }
 
     .date {

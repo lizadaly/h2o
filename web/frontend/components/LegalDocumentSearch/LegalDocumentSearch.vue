@@ -4,6 +4,7 @@
     <results-form
       @add-doc="onAddDoc"
       @reset-search="resetSearch"
+      @close="onClose"
       :search-results="results"
       :added="added"
       :selected-result="selectedResult"
@@ -42,6 +43,7 @@ export default {
     },
     onSearchResults: function (res) {
       this.resetSearch();
+      console.log(res)
       this.results = res;
     },
     onAddDoc: async function (sourceRef, sourceId) {
@@ -66,6 +68,10 @@ export default {
         sourceRef,
       };
     },
+    onClose: function () {
+      console.log('closing')
+      this.$emit('close');
+    }
   },
 };
 </script>
