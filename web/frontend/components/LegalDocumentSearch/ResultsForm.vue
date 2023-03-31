@@ -14,7 +14,6 @@
       :data-result-selected="r.id === selectedResult"
       :data-result-added="added && r.id === added.sourceRef"
       :key="r.id"
-      :disabled="!!selectedResult"
       class="results-entry"
       role="button"
       tabindex="0"
@@ -122,9 +121,6 @@ ol {
     &:hover,
     &:focus-within {
       background: hsl(43, 94%, 80%);
-    }
-    &[disabled] {
-      cursor: not-allowed;
     }
     .name {
       flex-basis: 40%;

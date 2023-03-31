@@ -16,10 +16,11 @@
 
     <button
       class="advanced-search-toggle"
-      @click.prevent="toggleAdvanced"
       type="button"
+      @click.prevent="toggleAdvanced"
     >
-      Advanced search
+      <span v-if="showAdvanced">Basic search</span>
+      <span v-else>Advanced search</span>
     </button>
 
     <fieldset v-if="showAdvanced" class="advanced-search">
@@ -28,8 +29,8 @@
         <select class="form-control" v-model="source">
           <option :value="undefined">All sources</option>
           <option
-            :value="source.id"
             v-for="source in getSources"
+            :value="source.id"
             :key="source.id"
           >
             {{ source.name }}
@@ -40,7 +41,7 @@
         Jurisdiction:
         <select class="form-control" v-model="jurisdiction" name="jurisdiction">
           <option :value="undefined">All jurisdictions</option>
-          <option :value="j.val" v-for="j in jurisdictions" :key="j.val">
+          <option v-for="j in jurisdictions" :value="j.val" :key="j.val">
             {{ j.name }}
           </option>
         </select>
@@ -65,8 +66,8 @@
           />
         </fieldset>
       </label>
-      <p>
-        {{ source && source.long_description }}
+      <p v-for="s in getSources" :key="s.id" class="source-description" :data-source-selected="source === s.id">
+        {{ s.long_description }}
       </p>
     </fieldset>
   </form>
@@ -157,13 +158,14 @@ export default {
     ...mapGetters(["getSources"]),
   },
   mounted() {
-    this.$refs.queryText.focus()
+    this.$refs.queryText.focus();
   },
   methods: {
     search: async function () {
       if (!this.query) {
         return;
       }
+
       this.pending = true;
       const sources = [];
       const sourceDetail = this.getSources.filter((s) =>
@@ -184,7 +186,6 @@ export default {
         sources.push({ url, id, name, order });
         order += 1;
       }
-
       const searchResults = await Promise.all(
         sources.map(async (source) => {
           const { url, id, name, order } = source;
@@ -192,7 +193,6 @@ export default {
             .then((r) => r.json())
             .then((r) => {
               const { results } = r;
-
               return results.map((row) => {
                 row.id = row.id.toString(); // normalize IDs from the API to strings
                 return {
@@ -205,7 +205,6 @@ export default {
             });
         })
       );
-
       this.pending = false;
       this.$emit("search-results", searchResults.flat());
     },
@@ -284,8 +283,12 @@ form {
       }
     }
 
-    p {
+    p.source-description {
       flex-basis: 100%;
+      display: none;
+    }
+    p.source-description[data-source-selected] {
+      display: block;
     }
   }
 }
