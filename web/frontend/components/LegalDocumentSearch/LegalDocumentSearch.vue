@@ -1,6 +1,6 @@
 <template>
   <section>
-    <search-form @search-results="onSearchResults" />
+    <search-form @search-results="onSearchResults" :toggle-reset="toggleReset" />
     <results-form
       @add-doc="onAddDoc"
       @reset-search="resetSearch"
@@ -15,11 +15,9 @@
 <script>
 import SearchForm from "./SearchForm";
 import ResultsForm from "./ResultsForm";
-import url from "../../libs/urls";
-import { get_csrf_token } from "../../legacy/lib/helpers";
 import { createNamespacedHelpers } from "vuex";
+import { add } from "../../libs/legal_document_search";
 
-const api = url.url("legal_document_resource_view");
 const { mapActions } = createNamespacedHelpers("table_of_contents");
 
 export default {
@@ -35,6 +33,7 @@ export default {
     results: undefined,
     added: undefined,
     selectedResult: undefined,
+    toggleReset: false
   }),
   methods: {
     ...mapActions(["fetch"]),
@@ -43,32 +42,15 @@ export default {
       this.results = undefined;
       this.added = undefined;
       this.selectedResult = undefined;
+      this.toggleReset = !this.toggleReset;
     },
     onSearchResults: function (res) {
-      this.resetSearch();
       this.results = res;
     },
     onAddDoc: async function (sourceRef, sourceId) {
       this.added = undefined;
       this.selectedResult = sourceRef.toString();
-      const resp = await fetch(api({ casebookId: this.casebook }), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRF-Token": get_csrf_token(),
-        },
-        body: JSON.stringify({
-          source_id: sourceId,
-          source_ref: sourceRef,
-          section_id: this.section,
-        }),
-      });
-      const body = await resp.json();
-      this.added = {
-        resourceId: body.resource_id,
-        redirectUrl: body.redirect_url,
-        sourceRef,
-      };
+      this.added = await add(this.casebook, this.section, sourceRef, sourceId)
       this.fetch({ casebook: this.casebook, subsection: this.section });
     },
   },
