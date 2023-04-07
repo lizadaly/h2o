@@ -1,8 +1,8 @@
 <template>
   <div>
     <h3>
-      Add an individual resource or a list of items by pasting them into the
-      field below.
+      {{ resourceInfo.description }}, or select a different option from the
+      dropdown for other types of content to add.
     </h3>
 
     <form @submit.stop.prevent="handleSubmit" class="form-control-group">
@@ -13,15 +13,16 @@
         class="form-control"
         placeholder="Enter case, heading, link, or outline here"
       />
-      <select v-model="resource_info" class="resource-type form-control">
+      <select v-model="resourceInfo" class="resource-type form-control">
         <option
-          v-for="option in resource_info_options"
-          :key="option.k"
+          v-for="option in resourceInfoOptions"
+          :key="option.name"
           :value="option.value"
         >
           {{ option.name }}
         </option>
       </select>
+
       <input
         @submit="handleSubmit"
         :value="mode"
@@ -30,7 +31,11 @@
       />
       <button
         v-if="mode === SEARCH"
-        @click.prevent="() => { showAdvanced = !showAdvanced} "
+        @click.prevent="
+          () => {
+            showAdvanced = !showAdvanced;
+          }
+        "
         class="advanced-search-toggle"
         type="button"
       >
@@ -62,45 +67,82 @@
 </template>
 
 <script>
-import _ from "lodash";
 import { createNamespacedHelpers } from "vuex";
 
-import ResultsForm from "./LegalDocumentSearch/ResultsForm";
-
-import Axios from "../config/axios";
+import { get_csrf_token } from "../legacy/lib/helpers";
 import pp from "libs/text_outline_parser";
 import urls from "libs/urls";
 import { search, add } from "libs/legal_document_search";
+
+import ResultsForm from "./LegalDocumentSearch/ResultsForm";
 import AdvancedSearch from "./LegalDocumentSearch/AdvancedSearch.vue";
 
 const globals = createNamespacedHelpers("globals");
 const caseSearch = createNamespacedHelpers("case_search");
 const { mapActions } = createNamespacedHelpers("table_of_contents");
 
-const optionsWithoutCloning = [
-  { name: "Section", value: { resource_type: "Section" }, k: 0 },
-  { name: "Legal Document", value: { resource_type: "LegalDocument" }, k: 1 },
-  { name: "Custom Content", value: { resource_type: "TextBlock" }, k: 2 },
-  { name: "Link", value: { resource_type: "Link" }, k: 3 },
+const optionTypes = {
+  SECTION: {
+    resource_type: "Section",
+    description:
+      "Group your casebook into discrete sections to organize the material",
+  },
+  LEGAL_DOCUMENT: {
+    description:
+      "Search our library of US case law and code for documents to automatically import",
+    resource_type: "LegalDocument",
+  },
+  CUSTOM_CONTENT: {
+    description: "Add your own written commentary or chapters",
+    resource_type: "TextBlock",
+  },
+  LINK: {
+    description: "Paste a link to an external resource or article",
+    resource_type: "Link",
+  },
+  CLONE: {
+    description:
+      "Paste a link to a resource in another casebook to automatically import it into your own",
+    resource_type: "Clone",
+  },
+  OUTLINE: {
+    description:
+      "Paste an outline of your table of contents and H2O will automatically create a draft casebook based on it",
+    resource_type: "Outline",
+  },
+};
+const options = [
+  {
+    name: "Section",
+    value: optionTypes.SECTION,
+  },
+  {
+    name: "Legal Document",
+    value: optionTypes.LEGAL_DOCUMENT,
+  },
+  {
+    name: "Custom Content",
+    value: optionTypes.CUSTOM_CONTENT,
+  },
+  {
+    name: "Link",
+    value: optionTypes.LINK,
+  },
+  {
+    name: "Clone",
+    value: optionTypes.CLONE,
+  },
+  {
+    name: "Outline",
+    value: optionTypes.OUTLINE,
+  },
 ];
 
-const data = function () {
+const initial = function () {
   return {
     title: "",
-    resource_info: optionsWithoutCloning[0].value,
-    resource_info_options: optionsWithoutCloning,
-  };
-};
-
-export default {
-  components: {
-    ResultsForm,
-    AdvancedSearch,
-  },
-  props: [],
-  data: () => ({
-    ...data(),
-    stats: {},
+    resourceInfo: options[0].value,
+    resourceInfoOptions: options,
     waitingFor: undefined,
     results: undefined,
     selectedResult: undefined,
@@ -113,36 +155,42 @@ export default {
       afterDate: undefined,
       source: undefined,
     },
+  };
+};
+
+export default {
+  components: {
+    ResultsForm,
+    AdvancedSearch,
+  },
+  data: () => ({
+    ...initial(),
   }),
-  directives: {},
   computed: {
     ...globals.mapGetters(["casebook", "section"]),
     ...caseSearch.mapGetters(["getSources"]),
     lineInfo: function () {
       return pp.guessLineType(this.title, this.getSources);
     },
-    desiredOrdinal: function () {
-      const ordinalGuess = this.title.match(/^[0-9]+(\.[0-9])* /);
-      if (ordinalGuess) {
-        return ordinalGuess[0];
-      }
-      return undefined;
-    },
     mode: function () {
-      return this.resource_info.resource_type === "LegalDocument"
+      return this.resourceInfo.resource_type === "LegalDocument"
         ? this.SEARCH
         : this.ADD;
     },
   },
   watch: {
     lineInfo: function () {
-      switch (this.lineInfo.resource_type)  {
+      switch (this.lineInfo.resource_type) {
         case "Temp": {
-          this.resource_info = { resource_type: "LegalDocument" };
+          this.resourceInfo = optionTypes.LEGAL_DOCUMENT;
           break;
         }
         case "Link": {
-          this.resource_info = { resource_type: "Link" };
+          this.resourceInfo = optionTypes.LINK;
+          break;
+        }
+        case "Clone": {
+          this.resourceInfo = optionTypes.CLONE;
           break;
         }
       }
@@ -152,13 +200,10 @@ export default {
     ...mapActions(["fetch"]),
 
     bulkAddUrl: urls.url("new_from_outline"),
+
     resetForm: function () {
-      let resets = data();
-      _.keys(resets).forEach((k) => {
-        this[k] = resets[k];
-      });
+      Object.keys(initial()).forEach((k) => (this[k] = initial()[k]));
       this.waitingFor = undefined;
-      this.manualResourceType = false;
       this.selectedResult = undefined;
       this.results = undefined;
     },
@@ -185,32 +230,11 @@ export default {
       this.fetch({ casebook: this.casebook(), subsection: this.section() });
       this.resetForm();
     },
+    
     handleAdd: function () {
-      let desiredSubset = _.pick(this.resource_info, [
-        "resource_type",
-        "url",
-        "casebookId",
-        "resource_id",
-        "sectionId",
-        "sectionOrd",
-        "userSlug",
-        "titleSlug",
-        "ordSlug",
-      ]);
-      let nodeData = { ...desiredSubset, title: this.title };
-
-      if (nodeData.resource_type === "Unknown") {
-        nodeData.resource_type = "Temp";
-      }
-      if (nodeData.resource_type === "Link") {
-        if (!nodeData.url) {
-          nodeData.url = nodeData.title;
-        }
-        nodeData.title = undefined;
-      }
       const data = {
         section: this.section(),
-        data: [nodeData],
+        data: [this.lineInfo],
       };
       this.postData(data);
     },
@@ -220,16 +244,24 @@ export default {
       }
       return this.handleAdd();
     },
-    postData: function (data) {
-      return Axios.post(
+    postData: async function (data) {
+      const resp = await fetch(
         this.bulkAddUrl({ casebookId: this.casebook() }),
-        data
-      ).then(this.handleSuccess, (resp) => console.error(resp));
-    },
-    handleSuccess: function (resp) {
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-Token": get_csrf_token(),
+          },
+          body: JSON.stringify(data),
+        }
+      );
+
+      const body = await resp.json();
+
       this.$store.dispatch("table_of_contents/slowMerge", {
         casebook: this.casebook(),
-        newToc: resp.data,
+        newToc: body,
       });
       this.resetForm();
     },
@@ -241,13 +273,8 @@ export default {
       if (pasted.indexOf("\n") >= 0) {
         this.waitingFor = "Parsing pasted text";
         const parsed = pp.cleanDocLines(pasted);
-        const [parsedJson, stats] = pp.structureOutline(
-          parsed,
-          this.getSources
-        );
-        _.keys(stats).map((k) => {
-          this.stats[k] = _.get(this.stats, k, 0) + stats[k];
-        });
+        const [parsedJson] = pp.structureOutline(parsed, this.getSources);
+
         this.postData({ section: this.section(), data: parsedJson.children });
         this.title = "";
       } else {
@@ -269,6 +296,7 @@ div {
   h3 {
     margin-top: 0;
     font-size: 130%;
+    line-height: 1.6em;
   }
 
   p:last-of-type {
