@@ -4425,6 +4425,11 @@ class User(NullableTimestampedModel, PermissionsMixin, AbstractBaseUser):
             followed_casebooks.append(cb)
         return followed_casebooks
 
+    @property
+    def is_attributable(self) -> bool:
+        """An author will be displayed in a credits list if they pass this test"""
+        return bool(self.attribution)
+    
     @staticmethod
     def user_can_view_instructional_material(user: Union[AnonymousUser, User]) -> bool:
         return user.is_authenticated and (user.verified_professor or user.is_staff)

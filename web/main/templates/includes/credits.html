@@ -6,7 +6,7 @@
             {% for row in contributing_casebooks %}
             <li>
                 <div class="casebook-credit-header">
-                    <a href="{{row.casebook.get_absolute_url}}"><h4> {{ row.casebook.title }} </h4></a>
+                    <a href="{{ row.casebook.get_absolute_url }}"><h4> {{ row.casebook.title }} </h4></a>
                     {% if row.immediate_authors or row.incidental_authors %}
                         <div class="author-list">
                             <span>Authors: </span>
@@ -20,9 +20,10 @@
                             {% if row.incidental_authors %}
                             <span> with additional contributions by:</span>
                             <ul class="incidental-author-list">
-                                {% for user in row.incidental_authors %}
+                                {% for user, clone in row.incidental_authors %}
                                 <li class="user {% if user.verified_professor %} verified{% endif %}">
                                     <a href="{% url 'dashboard' user.id %}">{{ user.display_name }}</a>
+                                    from {{ clone }}
                                 </li>
                                 {% endfor %}
                             </ul>
@@ -33,7 +34,7 @@
                 <div class="casebook-credit-nodes">
                     <ul class="cloned-content-list">
                         {% for node,prior,nesting_depth in row.nodes %}
-                        <li class="nesting-depth-{{nesting_depth}}">
+                        <li class="nesting-depth-{{ nesting_depth }}">
                             <span class="section-title">{{ node.ordinal_string }}{% if node.ordinal_string %}:{% endif %} {{ node.title }} </span> <a class="og-node-link" href="{{ prior.get_absolute_url }}">original</a>
                         </li>
                         {% endfor %}

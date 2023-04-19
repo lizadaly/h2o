@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Union
+from typing import Optional, Union
 import uuid
 from collections import OrderedDict
 from datetime import datetime, timedelta
@@ -1223,20 +1223,25 @@ def new_casebook(request):
     *viewable_resource,
     *viewable_section,
 )
-@requires_csrf_token
 @hydrate_params
 @user_has_perm("casebook", "viewable_by")
-def show_credits(request, casebook, section=None):
+def show_credits(request: HttpRequest, casebook: Casebook, section: Optional[ContentNode] = None):
+
+    current_object: Union[Casebook, ContentNode] = section or casebook 
+    contents: list[ContentNode]
+
+    # Limit the credits display based on the visible property of the nodes
     if section:
-        contents = [x for x in section.contents.all()] + [section]
+        contents = list(section.contents_for_user(user=request.user).all()) + [section]
     else:
-        contents = [x for x in casebook.contents.all()]
+        contents = list(casebook.nodes_for_user(user=request.user).all())
 
     contents.sort(key=lambda x: x.ordinals)
+
     originating_node = set(
         [cloned_node for child_content in contents for cloned_node in child_content.provenance]
     )
-    prior_art = {
+    prior_art: dict[int, ContentNode] = {
         x.id: x
         for x in ContentNode.objects.filter(id__in=originating_node)
         .select_related("casebook")
@@ -1245,6 +1250,7 @@ def show_credits(request, casebook, section=None):
     }
     casebook_mapping = {}
     cloned_sections = {}
+
     for node in contents:
         if not node.provenance:
             continue
@@ -1269,17 +1275,17 @@ def show_credits(request, casebook, section=None):
                 "immediate_authors": {
                     c.user
                     for c in immediate_clone.contentcollaborator_set.all()
-                    if c.has_attribution and c.user.display_name != "Anonymous"
+                    if c.has_attribution and c.user.is_attributable
                 },
                 "incidental_authors": set(),
                 "nodes": [],
             }
         casebook_mapping[immediate_clone.id]["incidental_authors"] |= {
-            c.user
+            (c.user, clone)
             for clone in incidental_clones
             for c in clone.contentcollaborator_set.all()
             if c.has_attribution
-            and c.user.display_name != "Anonymous"
+            and c.user.is_attributable
             and c.user not in casebook_mapping[immediate_clone.id]["immediate_authors"]
         }
         casebook_mapping[immediate_clone.id]["nodes"].append(
@@ -1292,12 +1298,13 @@ def show_credits(request, casebook, section=None):
             node_type = "section"
         else:
             node_type = "resource"
+
     params = {
         "contributing_casebooks": [v for v in casebook_mapping.values()],
         "casebook": casebook,
         "section": section,
         "type": node_type,
-        "tabs": (section if section else casebook).tabs_for_user(
+        "tabs": current_object.tabs_for_user(
             request.user, current_tab="Credits"
         ),
         "casebook_color_class": casebook.casebook_color_indicator,
