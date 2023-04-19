@@ -1227,7 +1227,7 @@ def new_casebook(request):
 @user_has_perm("casebook", "viewable_by")
 def show_credits(request: HttpRequest, casebook: Casebook, section: Optional[ContentNode] = None):
 
-    current_object: Union[Casebook, ContentNode] = section or casebook 
+    current_object: Union[Casebook, ContentNode] = section or casebook
     contents: list[ContentNode]
 
     # Limit the credits display based on the visible property of the nodes
@@ -1238,26 +1238,41 @@ def show_credits(request: HttpRequest, casebook: Casebook, section: Optional[Con
 
     contents.sort(key=lambda x: x.ordinals)
 
-    originating_node = set(
-        [cloned_node for child_content in contents for cloned_node in child_content.provenance]
+    originating_nodes = set(
+        [
+            cloned_node
+            for child_content in contents
+            for cloned_node in child_content.provenance
+            #if ContentNode.objects.get(id=cloned_node).casebook.first_published # type: ignore
+        ]
     )
+    for id in originating_nodes:
+        print(ContentNode.objects.get(id=id).casebook.title)
+
     prior_art: dict[int, ContentNode] = {
         x.id: x
-        for x in ContentNode.objects.filter(id__in=originating_node)
+        for x in ContentNode.objects.filter(id__in=originating_nodes)
         .select_related("casebook")
         .prefetch_related("casebook__contentcollaborator_set__user")
-        .all()
+        .filter()
     }
-    casebook_mapping = {}
-    cloned_sections = {}
+    casebook_mapping: dict[int, dict] = {}
+    cloned_sections: dict[int, set] = {}
 
     for node in contents:
         if not node.provenance:
             continue
         known_priors = [prior_art[p] for p in node.provenance if p in prior_art]
-        known_clones = [p.casebook for p in known_priors]
-        if not known_clones:
-            continue
+        possible_clones: list[Casebook] = [p.casebook for p in known_priors]  # type: ignore
+        known_clones: list[Casebook] = []
+
+        # Canonicalize these if they were just drafts
+        for casebook in possible_clones:
+            if casebook.is_previous_save:
+                known_clones.append(casebook.version_tree__parent())
+            else: 
+                known_clones.append(casebook)
+
         immediate_clone = known_clones[-1]
         incidental_clones = known_clones[:-1]
         cs_set = cloned_sections.get(immediate_clone.id, set())
@@ -1304,9 +1319,7 @@ def show_credits(request: HttpRequest, casebook: Casebook, section: Optional[Con
         "casebook": casebook,
         "section": section,
         "type": node_type,
-        "tabs": current_object.tabs_for_user(
-            request.user, current_tab="Credits"
-        ),
+        "tabs": current_object.tabs_for_user(request.user, current_tab="Credits"),
         "casebook_color_class": casebook.casebook_color_indicator,
         "edit_mode": casebook.directly_editable_by(request.user),
     }
@@ -3151,7 +3164,7 @@ def internal_search(request: HttpRequest):
         query=query,
         filters=filters,
         facet_fields=["attribution", "institution"],
-        order_by=request.GET.get("sort"),
+        order_by=request.GET.get("sort", ""),
     )
     full_counts = SearchIndex.counts(query=SearchIndex.objects.all())
 

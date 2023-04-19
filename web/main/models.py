@@ -4369,7 +4369,7 @@ class User(NullableTimestampedModel, PermissionsMixin, AbstractBaseUser):
     EMAIL_FIELD = "email_address"
     USERNAME_FIELD = "email_address"
     REQUIRED_FIELDS = []  # used by createsuperuser
-
+    
     objects = BaseUserManager()
 
     class Meta:
@@ -4428,7 +4428,7 @@ class User(NullableTimestampedModel, PermissionsMixin, AbstractBaseUser):
     @property
     def is_attributable(self) -> bool:
         """An author will be displayed in a credits list if they pass this test"""
-        return bool(self.attribution)
+        return self.attribution != "Anonymous"
     
     @staticmethod
     def user_can_view_instructional_material(user: Union[AnonymousUser, User]) -> bool:
