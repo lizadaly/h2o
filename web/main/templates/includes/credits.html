@@ -9,14 +9,19 @@
             {% for row in contributing_casebooks %}
             <li>
                 <div class="casebook-credit-header">
-                    <h3><a href="{{ row.casebook.get_absolute_url }}">{{ row.casebook.title }}</a></h3>
-                    First published {{ row.casebook.first_published.entry_date | date:"M Y" }}
-
+                    <header>
+                        <h3><a href="{{ row.casebook.get_absolute_url }}">{{ row.casebook.title }}</a></h3>
+                        {% if row.casebook.first_published  %}
+                            <span>(First published {{ row.casebook.first_published.entry_date | date:"M Y" }})</span>
+                        {% else %}
+                            <span>(First created {{ row.casebook.created_at | date:"M Y"}})</span>
+                        {% endif %}
+                    </header>
 
 
                     {% if row.immediate_authors or row.incidental_authors %}
                         <div class="author-list">
-                            <h4>Authors</h4>
+                            <h4>Authors:</h4>
                             <ul class="immediate-author-list">
                                 {% for user in row.immediate_authors %}
                                 <li class="user {% if user.verified_professor %} verified {% else %} not-verified {% endif %}">
@@ -29,7 +34,7 @@
 
                             <div class="casebook-credit-nodes">
                                 <ul class="cloned-content-list">
-                                    {% for node,prior,nesting_depth in row.nodes %}
+                                    {% for node, prior, nesting_depth in row.nodes %}
                                         {% if nesting_depth == 0 %}
                                             <li class="nesting-depth-{{ nesting_depth }}">
                                                 <span class="section-title"><a href="{{ prior.get_absolute_url }}">{{ node.ordinal_string }}{% if node.ordinal_string %}:{% endif %} {{ node.title }}</a></span>
@@ -48,7 +53,7 @@
                                     <a href="{% url 'dashboard' user.id %}">{{ user.display_name }}</a>
                                     from <a href="{{ clone.get_absolute_url }}">{{ clone.title }}</a> 
                                     {% if clone.first_published.entry_date %}
-                                    first published {{ clone.first_published.entry_date | date:"M Y" }} 
+                                    (first published {{ clone.first_published.entry_date | date:"M Y" }}) 
                                     {% endif %}
                                 </li>
                                 {% endfor %}

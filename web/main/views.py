@@ -1243,11 +1243,8 @@ def show_credits(request: HttpRequest, casebook: Casebook, section: Optional[Con
             cloned_node
             for child_content in contents
             for cloned_node in child_content.provenance
-            #if ContentNode.objects.get(id=cloned_node).casebook.first_published # type: ignore
         ]
     )
-    for id in originating_nodes:
-        print(ContentNode.objects.get(id=id).casebook.title)
 
     prior_art: dict[int, ContentNode] = {
         x.id: x
@@ -1267,14 +1264,18 @@ def show_credits(request: HttpRequest, casebook: Casebook, section: Optional[Con
         known_clones: list[Casebook] = []
 
         # Canonicalize these if they were just drafts
-        for casebook in possible_clones:
-            if casebook.is_previous_save:
-                known_clones.append(casebook.version_tree__parent())
+        for cb in possible_clones:
+            if cb.is_previous_save:
+                known_clones.append(cb.version_tree__parent())
             else: 
-                known_clones.append(casebook)
+                known_clones.append(cb)
+
+        if not known_clones:
+            continue
 
         immediate_clone = known_clones[-1]
-        incidental_clones = known_clones[:-1]
+        incidental_clones = [clone for clone in known_clones[:-1] if clone.casebook.first_published]
+
         cs_set = cloned_sections.get(immediate_clone.id, set())
         cs_set.add(".".join(map(str, node.ordinals)))
         cloned_sections[immediate_clone.id] = cs_set
@@ -1303,8 +1304,16 @@ def show_credits(request: HttpRequest, casebook: Casebook, section: Optional[Con
             and c.user.is_attributable
             and c.user not in casebook_mapping[immediate_clone.id]["immediate_authors"]
         }
+
+        # In the resource list, also upgrade any references to draft casebooks that should point to their published ancestor
+        prior_node = known_priors[-1]
+
+        if prior_node.casebook.is_previous_save: # type: ignore
+            prior_casebook = prior_node.casebook.version_tree__parent() # type: ignore
+            prior_node = prior_casebook.contents.filter(ordinals=prior_node.ordinals).first()
+
         casebook_mapping[immediate_clone.id]["nodes"].append(
-            (node, known_priors[-1], nesting_depth)
+            (node, prior_node, nesting_depth)
         )
 
     node_type = "casebook"
